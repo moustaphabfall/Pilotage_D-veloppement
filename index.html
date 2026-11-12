@@ -16757,7 +16757,7 @@ const PG_FEATS=[
   const STAT = [['envoyee','Lien envoyé'],['recue','Reçue'],['traitement','En traitement'],['planifiee','Planifiée'],['encours','En cours'],['terminee','Terminée'],['annulee','Annulée']];
   const URG = ['Normale','Haute','Urgente'];
   const MODES = {chef:'Chef d’équipe', resp:'Responsable opérationnel', confiance:'Compagnon'};
-  const PAGES = [['net-demandes','📥 Demandes'],['net-clients','🏢 Clients'],['net-rh','🧑‍🤝‍🧑 Ressources humaines'],['net-affect','👥 Affectations'],['net-pointage','⏱ Pointage'],['net-moi','🙋 Mon espace'],['net-rapports','📊 Rapports']];
+  const PAGES = [['net-demandes','📥 Demandes'],['net-reserves','🧽 Réserves'],['net-clients','🏢 Clients'],['net-rh','🧑‍🤝‍🧑 Ressources humaines'],['net-affect','👥 Affectations'],['net-pointage','⏱ Pointage'],['net-moi','🙋 Mon espace'],['net-notifs','🔔 Notifications'],['net-rapports','📊 Rapports']];
   const HIDE = ['dashboard','interloc','travaux','planif','plans','refac','rex'];
   const esc = t=>String(t==null?'':t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   const uid = ()=>'n'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
@@ -16770,7 +16770,7 @@ const PG_FEATS=[
   const who = ()=>{ try{ const m = pilotageMe(); return m&&m.nom||''; }catch(e){ return ''; } };
   const DEF_METIERS=['Agent de nettoyage','Agent d’entretien','Laveur de vitres','Agent de remise en état (fin de chantier)','Opérateur autolaveuse','Cariste','Préparateur de commandes','Manutentionnaire','Magasinier','Chauffeur-livreur','Homme trafic','Agent de sécurité','Agent de sécurité incendie (SSIAP 1)','Chef d’équipe','Responsable opérationnel','Responsable de site'];
   const DEF_QUALS=['CACES R489 (chariots)','CACES R485','SST (sauveteur secouriste)','Habilitation électrique B0/H0','Travail en hauteur','Port de charges','Permis B','Permis C','SSIAP 1','Carte professionnelle CNAPS','Formation hygiène (HACCP)','Habilitation nettoyage industriel'];
-  function net(){ const n = state.net = state.net || {}; ['clients','agents','demandes','affectations','pointages','ptv'].forEach(k=>{ if(!Array.isArray(n[k])) n[k]=[]; }); if(!Array.isArray(n.metiers)) n.metiers=DEF_METIERS.slice(); if(!Array.isArray(n.quals)) n.quals=DEF_QUALS.slice(); if(!n.tarifs||typeof n.tarifs!=='object') n.tarifs={}; return n; }
+  function net(){ const n = state.net = state.net || {}; ['clients','agents','demandes','affectations','pointages','ptv','notifs','reserves','absReq'].forEach(k=>{ if(!Array.isArray(n[k])) n[k]=[]; }); if(!Array.isArray(n.metiers)) n.metiers=DEF_METIERS.slice(); if(!Array.isArray(n.quals)) n.quals=DEF_QUALS.slice(); if(!n.tarifs||typeof n.tarifs!=='object') n.tarifs={}; return n; }
   const by = (arr,id)=>arr.find(x=>x.id===id);
   const projsOf = c=>(c&&Array.isArray(c.projets))?c.projets:(c?(c.projets=[]):[]);
   const projLbl = p=>p?(p.nom+(p.adresse?' — '+p.adresse:'')):'';
@@ -17213,7 +17213,7 @@ const PG_FEATS=[
     const n=net(), cnt=m=>n.agents.filter(g=>g.metier===m).length, cq=q=>n.agents.filter(g=>(g.quals||[]).includes(q)).length;
     const list=n.agents.filter(g=>(!rhF.cat||(g.cat||'agent')===rhF.cat)&&(!rhF.metier||g.metier===rhF.metier)&&(!rhF.q||(g.quals||[]).includes(rhF.q))).sort((a,b)=>(a.nom||'').localeCompare(b.nom||''));
     const chips=(arr,k,cf)=>arr.map((m,i)=>'<span class="rh-c"><b data-ren="'+k+':'+i+'" title="Renommer">'+esc(m)+'</b><small>'+cf(m)+'</small><i data-del="'+k+':'+i+'" title="Supprimer">✕</i></span>').join('');
-    w.innerHTML='<div class="nt"><div class="nt-h"><h2>🧑‍🤝‍🧑 Ressources humaines</h2><button class="pri" id="rhNew">➕ Nouvelle personne</button></div>'+rhTabs()
+    w.innerHTML='<div class="nt"><div class="nt-h"><h2>🧑‍🤝‍🧑 Ressources humaines</h2><button class="pri" id="rhNew">➕ Nouvelle personne</button></div>'+rhTabs()+rhAbsBlock()
       +'<div class="nt-chips"><button class="'+(!rhF.cat?'on':'')+'" data-c="">Tous <b>'+n.agents.length+'</b></button><button class="'+(rhF.cat==='agent'?'on':'')+'" data-c="agent">Agents <b>'+n.agents.filter(g=>(g.cat||'agent')==='agent').length+'</b></button><button class="'+(rhF.cat==='enc'?'on':'')+'" data-c="enc">Encadrement <b>'+n.agents.filter(g=>g.cat==='enc').length+'</b></button>'
       +'<select id="rhFm"><option value="">Tous les métiers</option>'+n.metiers.map(m=>'<option'+(m===rhF.metier?' selected':'')+'>'+esc(m)+'</option>').join('')+'</select><select id="rhFq"><option value="">Toutes les qualifications</option>'+n.quals.map(m=>'<option'+(m===rhF.q?' selected':'')+'>'+esc(m)+'</option>').join('')+'</select></div>'
       +(list.length?'<div class="nt-tw"><table class="nt-t"><thead><tr><th>Nom</th><th>Catégorie</th><th>Métier</th><th>Qualifications</th><th>Téléphone</th><th>Pointage par</th></tr></thead><tbody>'+list.map(g=>'<tr data-g="'+g.id+'"><td><b>'+esc(g.nom)+'</b></td><td>'+(g.cat==='enc'?'Encadrement':'Agent')+'</td><td>'+esc(g.metier||'—')+'</td><td>'+((g.quals||[]).map(q=>'<span class="rh-t">'+esc(q)+'</span>').join('')||'—')+'</td><td>'+esc(g.tel||'')+'</td><td>'+esc(MODES[g.mode]||'')+'</td></tr>').join('')+'</tbody></table></div>':'<p class="nt-e">'+(n.agents.length?'Aucune personne ne correspond à ces filtres.':'Aucune personne. Ajoutez les agents et l’encadrement que vous pouvez affecter.')+'</p>')
@@ -17221,6 +17221,8 @@ const PG_FEATS=[
       +'<div class="nt-card"><h3>Qualifications</h3><p class="nt-s">Habilitations, permis, certifications…</p><div class="rh-cs">'+chips(n.quals,'q',cq)+'</div><div class="rh-add"><input id="rhQn" placeholder="Nouvelle qualification"><button id="rhQa">Ajouter</button></div></div></div></div>';
     const q=x=>w.querySelector(x);
     q('#rhNew').onclick=()=>agentForm(); rhBindTabs(w);
+    w.querySelectorAll('[data-abok]').forEach(b=>b.onclick=()=>{ absDecide(by(n.absReq,b.dataset.abok),true); render('net-rh'); });
+    w.querySelectorAll('[data-abko]').forEach(b=>b.onclick=()=>{ if(!confirm('Refuser cette demande d’absence ?')) return; absDecide(by(n.absReq,b.dataset.abko),false); render('net-rh'); });
     w.querySelectorAll('.nt-chips [data-c]').forEach(b=>b.onclick=()=>{ rhF.cat=b.dataset.c; render('net-rh'); });
     q('#rhFm').onchange=e=>{ rhF.metier=e.target.value; render('net-rh'); }; q('#rhFq').onchange=e=>{ rhF.q=e.target.value; render('net-rh'); };
     w.querySelectorAll('tr[data-g]').forEach(r=>r.onclick=()=>agentForm(by(n.agents,r.dataset.g)));
@@ -17260,6 +17262,110 @@ const PG_FEATS=[
     w.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{ if(!confirm('Retirer cette affectation et ses pointages ?')) return; n.pointages=n.pointages.filter(p=>p.affId!==b.dataset.del); n.affectations=n.affectations.filter(a=>a.id!==b.dataset.del); save(); render('net-affect'); });
   }
 
+  /* ===================== v379 : réserves, notifications, géolocalisation, demandes d'absence ===================== */
+  const myMail = ()=>(window.PILOTAGE_USER_EMAIL||'').toLowerCase();
+  const meAgent = ()=>{ const m=myMail(); return m?net().agents.find(g=>g.email&&g.email.toLowerCase()===m)||null:null; };
+  const isMgr = ()=>{ try{ const p=window.PILOTAGE_PROJET; if(!p||p.role==='admin') return true; }catch(e){} const g=meAgent(); return !g||g.mode==='resp'||(window.pgCan?pgCan('net-demandes'):false); };
+  /* notifications : to = 'manager' | 'agent:<id>' | 'client:<id>' */
+  function notify(to,txt,ref){ const n=net(); n.notifs.unshift({id:uid(),at:new Date().toISOString(),to,txt,ref:ref||null,lu:[]}); if(n.notifs.length>500) n.notifs.length=500; save(); try{ badgeNotif(); }catch(e){} }
+  const notifKey = ()=>myMail()||'local';
+  function myNotifs(){ const n=net(), g=meAgent(), mg=isMgr(); return n.notifs.filter(x=>(x.to==='manager'&&mg)||(g&&x.to==='agent:'+g.id)||(mg&&x.to.indexOf('client:')===0)); }
+  const unread = ()=>myNotifs().filter(x=>!(x.lu||[]).includes(notifKey())).length;
+  function badgeNotif(){ const b=document.querySelector('.tab[data-page="net-notifs"]'); if(!b) return; const k=unread(); b.textContent='🔔 Notifications'+(k?' ('+k+')':''); b.classList.toggle('nt-hasn',!!k); }
+  setInterval(()=>{ try{ badgeNotif(); }catch(e){} },20000);
+  const ago = iso=>{ const d=new Date(iso), s=(Date.now()-d)/1000; if(s<60) return 'à l’instant'; if(s<3600) return 'il y a '+Math.floor(s/60)+' min'; if(s<86400) return 'il y a '+Math.floor(s/3600)+' h'; return d.toLocaleDateString('fr-FR')+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); };
+  function pgNotifs(w){ const L=myNotifs(), k=notifKey();
+    w.innerHTML='<div class="nt"><div class="nt-h"><h2>🔔 Notifications</h2><div class="nt-av">'+(L.length?'<button id="nfAll">✔ Tout marquer comme lu</button>':'')+'</div></div>'
+      +(L.length?L.map(x=>{ const lu=(x.lu||[]).includes(k); return '<div class="nt-card nt-nf'+(lu?'':' new')+'" data-nf="'+x.id+'"><div>'+esc(x.txt)+'</div><small>'+ago(x.at)+(x.to.indexOf('client:')===0?' · pour le client':'')+'</small></div>'; }).join(''):'<p class="nt-e">Aucune notification.</p>')+'</div>';
+    const mark=x=>{ x.lu=x.lu||[]; if(!x.lu.includes(k)) x.lu.push(k); };
+    const all=w.querySelector('#nfAll'); if(all) all.onclick=()=>{ L.forEach(mark); save(); render('net-notifs'); badgeNotif(); };
+    w.querySelectorAll('[data-nf]').forEach(c=>c.onclick=()=>{ const x=by(net().notifs,c.dataset.nf); if(!x) return; mark(x); save(); badgeNotif(); if(x.ref&&x.ref.page){ showPage(x.ref.page); } else render('net-notifs'); });
+  }
+
+  /* photo : compressée (1280 px max, JPEG) pour rester légère dans la sauvegarde */
+  function pickPhoto(cb){ const i=document.createElement('input'); i.type='file'; i.accept='image/*'; i.setAttribute('capture','environment');
+    i.onchange=()=>{ const f=i.files&&i.files[0]; if(!f) return; const r=new FileReader(); r.onload=()=>{ const im=new Image(); im.onload=()=>{ const s=Math.min(1,1280/Math.max(im.width,im.height)), c=document.createElement('canvas'); c.width=Math.round(im.width*s); c.height=Math.round(im.height*s); c.getContext('2d').drawImage(im,0,0,c.width,c.height); cb(c.toDataURL('image/jpeg',.72)); }; im.onerror=()=>cb(r.result); im.src=r.result; }; r.readAsDataURL(f); };
+    i.click(); }
+
+  /* ---------- Réserves : créées par le manager (ou reçues du client), envoyées à un agent, levées avec photo ---------- */
+  let rsF='alever';
+  const RS_ST={alever:['À lever','s-planifiee'],levee:['Levée','s-terminee'],annulee:['Annulée','s-annulee']};
+  function reserveForm(r){ const n=net(), nw=!r; r=r||{clientId:'',projetId:'',lieu:'',desc:'',agentId:'',butoir:'',email:''};
+    const cl=n.clients, ag=n.agents.filter(g=>!/responsable/i.test(g.metier||''));
+    modal('<button class="close-x" data-x>×</button><h3>'+(nw?'🧽 Nouvelle réserve':'🧽 Réserve '+esc(r.num))+'</h3>'
+      +'<div class="nt-r"><label>Client<select id="rCl"><option value="">— client —</option>'+opt(cl,r.clientId,c=>[c.id,c.nom])+'</select></label><label>Site<select id="rPj"></select></label></div>'
+      +'<label>Lieu précis (niveau, pièce, zone)<input id="rLi" value="'+esc(r.lieu)+'" placeholder="ex. R+2, sanitaires hommes"></label>'
+      +'<label>Ce qui doit être repris<textarea id="rDe" rows="3" placeholder="ex. traces au sol devant l’ascenseur">'+esc(r.desc)+'</textarea></label>'
+      +'<div class="nt-r"><label>Agent qui lève la réserve<select id="rAg"><option value="">— agent —</option>'+opt(ag,r.agentId,g=>[g.id,g.nom+(g.metier?' · '+g.metier:'')])+'</select></label><label>À lever avant le<input type="date" id="rBu" value="'+esc(r.butoir||'')+'"></label></div>'
+      +'<label>E-mail du client à prévenir à la levée <small>(facultatif)</small><input type="email" id="rEm" value="'+esc(r.email||'')+'"></label>'
+      +'<div id="rPh">'+(r.photoAvant?'<img class="nt-ph" src="'+r.photoAvant+'">':'')+'</div><button type="button" id="rPhB">📷 '+(r.photoAvant?'Changer la photo':'Photo de la réserve (facultatif)')+'</button>'
+      +'<div class="modal-actions"><button class="pri" id="rOk">'+(nw?'Envoyer à l’agent':'Enregistrer')+'</button>'+(nw?'':'<button class="del" id="rAn">Annuler la réserve</button>')+'<button data-x>Fermer</button></div>',
+    o=>{ let ph=r.photoAvant||null; const q=x=>o.querySelector(x);
+      const fillPj=()=>{ const c=by(n.clients,q('#rCl').value), L=c?projsOf(c):[]; q('#rPj').innerHTML='<option value="">— site —</option>'+opt(L,r.projetId,x=>[x.id,projLbl(x)]); const prev=n.reserves.find(x=>x.clientId===q('#rCl').value&&x.email); if(prev&&!q('#rEm').value) q('#rEm').value=prev.email; };
+      q('#rCl').onchange=fillPj; fillPj();
+      q('#rPhB').onclick=()=>pickPhoto(d=>{ ph=d; q('#rPh').innerHTML='<img class="nt-ph" src="'+d+'">'; });
+      q('#rOk').onclick=()=>{ const v={clientId:val(o,'rCl'),projetId:val(o,'rPj'),lieu:val(o,'rLi'),desc:val(o,'rDe'),agentId:val(o,'rAg'),butoir:val(o,'rBu'),email:val(o,'rEm'),photoAvant:ph};
+        if(!v.desc){ alert('Décrivez ce qui doit être repris.'); return; } if(!v.agentId){ alert('Choisissez l’agent qui lèvera la réserve.'); return; }
+        const g=by(n.agents,v.agentId)||{nom:'?'};
+        if(nw){ const x=Object.assign({id:uid(),num:'R'+String(n.reserves.length+1).padStart(4,'0'),statut:'alever',creeLe:new Date().toISOString(),creePar:who()||'—'},v); n.reserves.unshift(x);
+          notify('agent:'+v.agentId,'Nouvelle réserve '+x.num+' à lever'+(v.lieu?' — '+v.lieu:'')+' : '+v.desc+(v.butoir?' (avant le '+fr(v.butoir)+')':''),{page:'net-moi'}); }
+        else { const was=r.agentId; Object.assign(r,v); if(was!==v.agentId) notify('agent:'+v.agentId,'Réserve '+r.num+' qui vous est confiée : '+v.desc,{page:'net-moi'}); }
+        save(); o.remove(); render('net-reserves'); };
+      const an=q('#rAn'); if(an) an.onclick=()=>{ if(!confirm('Annuler cette réserve ?')) return; r.statut='annulee'; save(); o.remove(); render('net-reserves'); };
+    });
+  }
+  function leverReserve(r,after){ pickPhoto(d=>{ const g=by(net().agents,r.agentId)||{nom:who()||'?'}; r.statut='levee'; r.photoApres=d; r.leveeLe=new Date().toISOString(); r.leveePar=who()||g.nom;
+    const c=by(net().clients,r.clientId)||{nom:'client'}; const t='Réserve '+r.num+' levée par '+r.leveePar+(r.lieu?' — '+r.lieu:'')+' ('+c.nom+')';
+    notify('manager',t,{page:'net-reserves'}); notify('client:'+(r.clientId||''),t+'. Le client est à prévenir'+(r.email?' : '+r.email:'')+'.',{page:'net-reserves'}); save(); if(after) after(); }); }
+  function mailClient(r){ const c=by(net().clients,r.clientId)||{nom:''}; const s='Réserve '+r.num+' levée', b='Bonjour,\n\nLa réserve '+r.num+(r.lieu?' ('+r.lieu+')':'')+' a été levée le '+new Date(r.leveeLe).toLocaleDateString('fr-FR')+' par notre équipe : '+r.desc+'.\nLa photo de la reprise est disponible sur demande.\n\nCordialement';
+    location.href='mailto:'+encodeURIComponent(r.email||'')+'?subject='+encodeURIComponent(s)+'&body='+encodeURIComponent(b); r.clientPrevenu=new Date().toISOString(); save(); }
+  function pgReserves(w){ const n=net(), cnt={}; n.reserves.forEach(r=>cnt[r.statut]=(cnt[r.statut]||0)+1);
+    const L=n.reserves.filter(r=>!rsF||r.statut===rsF);
+    w.innerHTML='<div class="nt"><div class="nt-h"><h2>🧽 Réserves</h2><div class="nt-av"><button class="pri" id="rsNew">➕ Nouvelle réserve</button></div></div>'
+      +'<div class="nt-chips">'+[['','Toutes',n.reserves.length]].concat(Object.keys(RS_ST).map(k=>[k,RS_ST[k][0],cnt[k]||0])).map(x=>'<button class="'+(rsF===x[0]?'on':'')+'" data-f="'+x[0]+'">'+x[1]+' <b>'+x[2]+'</b></button>').join('')+'</div>'
+      +(L.length?'<div class="nt-tw"><table class="nt-t"><thead><tr><th>N°</th><th>Client · lieu</th><th>À reprendre</th><th>Agent</th><th>Avant le</th><th>Statut</th><th>Photos</th><th></th></tr></thead><tbody>'
+        +L.map(r=>{ const c=by(n.clients,r.clientId)||{nom:'—'}, g=by(n.agents,r.agentId)||{nom:'—'}, late=r.statut==='alever'&&r.butoir&&r.butoir<today();
+          return '<tr data-r="'+r.id+'"><td>'+esc(r.num)+'</td><td>'+esc(c.nom)+(r.lieu?'<br><small>'+esc(r.lieu)+'</small>':'')+'</td><td>'+esc(r.desc)+'</td><td>'+esc(g.nom)+'</td><td class="'+(late?'ko':'')+'">'+fr(r.butoir)+'</td><td><span class="nt-st '+RS_ST[r.statut][1]+'">'+RS_ST[r.statut][0]+'</span>'+(r.statut==='levee'?'<br><small>'+ago(r.leveeLe)+'</small>':'')+'</td>'
+            +'<td>'+(r.photoAvant?'<img class="nt-th" data-img="'+r.id+'|a" src="'+r.photoAvant+'">':'')+(r.photoApres?'<img class="nt-th" data-img="'+r.id+'|p" src="'+r.photoApres+'">':'')+'</td>'
+            +'<td class="nt-act">'+(r.statut==='levee'?'<button data-mc="'+r.id+'">✉ '+(r.clientPrevenu?'Client prévenu':'Prévenir le client')+'</button>':'')+'</td></tr>'; }).join('')+'</tbody></table></div>'
+        :'<p class="nt-e">Aucune réserve'+(rsF?' dans cette liste':'')+'.</p>')+'</div>';
+    w.querySelector('#rsNew').onclick=()=>reserveForm();
+    w.querySelectorAll('.nt-chips [data-f]').forEach(b=>b.onclick=()=>{ rsF=b.dataset.f; render('net-reserves'); });
+    w.querySelectorAll('tr[data-r]').forEach(tr=>tr.onclick=e=>{ if(e.target.closest('button,img')) return; const r=by(n.reserves,tr.dataset.r); if(r&&r.statut==='alever') reserveForm(r); });
+    w.querySelectorAll('[data-mc]').forEach(b=>b.onclick=()=>{ mailClient(by(n.reserves,b.dataset.mc)); render('net-reserves'); });
+    w.querySelectorAll('[data-img]').forEach(im=>im.onclick=()=>{ const [id,k]=im.dataset.img.split('|'), r=by(n.reserves,id); modal('<button class="close-x" data-x>×</button><h3>'+(k==='a'?'Avant':'Après levée')+' — '+esc(r.num)+'</h3><img class="nt-ph" src="'+(k==='a'?r.photoAvant:r.photoApres)+'">'); });
+  }
+  /* bloc « Mes réserves » dans Mon espace */
+  function moiReserves(ag){ const L=net().reserves.filter(r=>r.agentId===ag.id&&r.statut==='alever'); if(!L.length) return '';
+    return '<h3>🧽 Mes réserves à lever <small>('+L.length+')</small></h3>'+L.map(r=>{ const c=by(net().clients,r.clientId)||{nom:''}; return '<div class="nt-card mo-c"><h3>'+esc(r.num)+' · '+esc(c.nom)+'</h3><p>'+(r.lieu?'📍 '+esc(r.lieu)+'<br>':'')+esc(r.desc)+(r.butoir?'<br>⏳ avant le '+fr(r.butoir):'')+'</p>'+(r.photoAvant?'<img class="nt-ph" src="'+r.photoAvant+'">':'')+'<div class="mo-b"><button class="pri" data-lev="'+r.id+'">📷 Photo + Levé / Fait</button></div></div>'; }).join(''); }
+
+  /* ---------- Géolocalisation au pointage (avec consentement, une fois par utilisateur) ---------- */
+  function geoAsk(cb){ const k='net-geo-'+notifKey(); let v=null; try{ v=localStorage.getItem(k); }catch(e){}
+    if(v===null){ v=confirm('Pointage : autorisez-vous l’enregistrement de votre position au moment où vous pointez (arrivée et départ) ?\n\nElle sert uniquement à vérifier la présence sur le site. Vous pouvez refuser et pointer quand même.')?'oui':'non'; try{ localStorage.setItem(k,v); }catch(e){} }
+    if(v!=='oui'||!navigator.geolocation){ cb(v==='oui'?{err:'indisponible'}:{refus:true}); return; }
+    let done=false; const fin=x=>{ if(!done){ done=true; cb(x); } };
+    setTimeout(()=>fin({err:'délai dépassé'}),12000);
+    navigator.geolocation.getCurrentPosition(p=>fin({lat:+p.coords.latitude.toFixed(6),lng:+p.coords.longitude.toFixed(6),acc:Math.round(p.coords.accuracy)}),e=>fin({err:e.code===1?'refusée par le téléphone':'indisponible'}),{enableHighAccuracy:true,timeout:10000,maximumAge:60000}); }
+  const geoTag = g=>!g?'':g.lat!=null?' <a href="https://www.openstreetmap.org/?mlat='+g.lat+'&mlon='+g.lng+'#map=18/'+g.lat+'/'+g.lng+'" target="_blank" rel="noopener" title="Position au pointage (± '+g.acc+' m)">📍</a>':' <span title="Position non enregistrée ('+(g.refus?'non autorisée':esc(g.err||''))+')">⦸</span>';
+
+  /* ---------- Demandes d'absence ---------- */
+  const AB_MOT=['Congés payés','Maladie','Formation','Événement familial','Sans solde','Autre'];
+  function absReqForm(ag){ modal('<button class="close-x" data-x>×</button><h3>🗓 Demande d’absence</h3>'
+      +'<div class="nt-r"><label>Du<input type="date" id="aDu" value="'+today()+'"></label><label>Au<input type="date" id="aAu" value="'+today()+'"></label></div>'
+      +'<label>Motif<select id="aMo">'+AB_MOT.map(m=>'<option>'+m+'</option>').join('')+'</select></label><label>Commentaire <small>(facultatif)</small><input id="aCo"></label>'
+      +'<div class="modal-actions"><button class="pri" id="aOk">Envoyer la demande</button><button data-x>Annuler</button></div>',
+    o=>{ o.querySelector('#aOk').onclick=()=>{ const du=val(o,'aDu'), au=val(o,'aAu'); if(!du||!au||au<du){ alert('Vérifiez les dates.'); return; }
+      const n=net(), x={id:uid(),agentId:ag.id,du,au,motif:val(o,'aMo'),com:val(o,'aCo'),statut:'attente',le:new Date().toISOString()}; n.absReq.unshift(x);
+      notify('manager','Demande d’absence de '+ag.nom+' : '+x.motif+', du '+fr(du)+' au '+fr(au)+'.',{page:'net-rh'}); save(); o.remove(); render('net-moi'); }; }); }
+  function absDecide(x,ok){ const n=net(), g=by(n.agents,x.agentId); x.statut=ok?'acceptee':'refusee'; x.par=who()||'—'; x.decideLe=new Date().toISOString();
+    if(ok&&g){ (g.absences=g.absences||[]).push({du:x.du,au:x.au,motif:x.motif}); }
+    notify('agent:'+x.agentId,'Votre demande d’absence du '+fr(x.du)+' au '+fr(x.au)+' est '+(ok?'acceptée':'refusée')+'.',{page:'net-moi'}); save(); }
+  const AB_ST={attente:['En attente','s-traitement'],acceptee:['Acceptée','s-terminee'],refusee:['Refusée','s-annulee']};
+  function moiAbs(ag){ const L=net().absReq.filter(x=>x.agentId===ag.id).slice(0,6);
+    return '<h3>🗓 Mes absences</h3><div class="mo-b"><button id="mAbs">➕ Demander une absence</button></div>'+(L.length?L.map(x=>'<p class="nt-s">'+fr(x.du)+' → '+fr(x.au)+' · '+esc(x.motif)+' <span class="nt-st '+AB_ST[x.statut][1]+'">'+AB_ST[x.statut][0]+'</span></p>').join(''):''); }
+  function rhAbsBlock(){ const n=net(), L=n.absReq.filter(x=>x.statut==='attente'); if(!L.length) return '';
+    return '<div class="nt-card"><b>🗓 Demandes d’absence à traiter ('+L.length+')</b>'+L.map(x=>{ const g=by(n.agents,x.agentId)||{nom:'?'}; return '<div class="nt-r" style="align-items:center;justify-content:space-between;border-top:1px solid #e5e9eb;padding-top:6px;margin-top:6px"><span><b>'+esc(g.nom)+'</b> · '+esc(x.motif)+' · du '+fr(x.du)+' au '+fr(x.au)+(x.com?'<br><small>'+esc(x.com)+'</small>':'')+'</span><span class="nt-av"><button class="pri" data-abok="'+x.id+'">✔ Accepter</button><button class="del" data-abko="'+x.id+'">✕ Refuser</button></span></div>'; }).join('')+'</div>'; }
+
   /* ---------- Pointage ---------- */
   /* ---------- Pointage : par projet → par demande → plan + effectifs ---------- */
   let pDate = null, pProj = null;
@@ -17267,9 +17373,9 @@ const PG_FEATS=[
   function statusOf(a,date){ const p=ptOf(a,date), late=net().pointages.some(x=>x.affId===a.id&&x.date===date&&x.type==='late');
     if(p.abs) return {k:'absent',p}; if(p.i&&p.o) return {k:'termine',p}; if(p.i) return {k:'present',p,late:Math.max(0,min(p.i.hhmm)-min(a.hDebut))};
     if(late||(date===today()&&min(nowHM())>min(a.hDebut)+15)) return {k:'retard',p}; return {k:'attendu',p}; }
-  function pointSet(a,date,st){ const n=net(), g=by(n.agents,a.agentId)||{}, td=date===today(), now=td?nowHM():null, cur=ptOf(a,date);
+  function pointSet(a,date,st,geo){ const n=net(), g=by(n.agents,a.agentId)||{}, td=date===today(), now=td?nowHM():null, cur=ptOf(a,date);
     const del=f=>{ n.pointages=n.pointages.filter(x=>!(x.affId===a.id&&x.date===date&&f(x))); };
-    const add=(type,hhmm)=>n.pointages.push({id:uid(),affId:a.id,agentId:a.agentId,date,type,hhmm:hhmm||nowHM(),par:who()||'—',mode:g.mode||''});
+    const add=(type,hhmm)=>n.pointages.push(Object.assign({id:uid(),affId:a.id,agentId:a.agentId,date,type,hhmm:hhmm||nowHM(),par:who()||'—',mode:g.mode||''},(geo&&(type==='in'||type==='out'))?{geo}:{}));
     if(st==='attendu') del(()=>true);
     else if(st==='present'){ del(x=>x.type==='abs'||x.type==='late'||x.type==='out'); if(!cur.i) add('in',now||a.hDebut); }
     else if(st==='retard'){ del(()=>true); add('late',now||a.hDebut); }
@@ -17342,7 +17448,7 @@ const PG_FEATS=[
   function ptvSubmit(a,date){ const n=net(), g=by(n.agents,a.agentId)||{}; let r=ptvOf(a.id,date); if(!r){ r={id:uid(),affId:a.id,demandeId:a.demandeId,agentId:a.agentId,date}; n.ptv.push(r); }
     Object.assign(r,{stage:(chefFor(a,date)&&!isChef(g))?'chef':'resp',subBy:who()||g.nom,subAt:nowHM()}); delete r.chefBy; delete r.respBy; save(); return r; }
   const ptAdd=(a,date,type,hhmm,extra)=>{ const n=net(), g=by(n.agents,a.agentId)||{}; n.pointages.push(Object.assign({id:uid(),affId:a.id,agentId:a.agentId,date,type,hhmm:hhmm||nowHM(),par:who()||g.nom||'—',mode:g.mode||''},extra||{})); save(); };
-  function ptLine(a,date){ const p=ptOf(a,date); return (p.i?'arrivée '+esc(p.i.hhmm):'pas encore pointé')+(p.o?' · départ '+esc(p.o.hhmm):'')+(p.ot?' · heures sup. '+Math.floor(p.ot/60)+'h'+String(p.ot%60).padStart(2,'0'):''); }
+  function ptLine(a,date){ const p=ptOf(a,date); return (p.i?'arrivée '+esc(p.i.hhmm)+geoTag(p.i.geo):'pas encore pointé')+(p.o?' · départ '+esc(p.o.hhmm)+geoTag(p.o.geo):'')+(p.ot?' · heures sup. '+Math.floor(p.ot/60)+'h'+String(p.ot%60).padStart(2,'0'):''); }
   function ptvRow(r,btn){ const n=net(), a=by(n.affectations,r.affId), g=by(n.agents,r.agentId)||{nom:'?'}, d=by(n.demandes,r.demandeId)||{num:'?'}, c=by(n.clients,d.clientId)||{nom:'—'};
     return '<div class="mo-v"><div><b>'+esc(g.nom)+'</b> · '+esc(c.nom)+' · '+esc(d.num)+' · '+fr(r.date)+'<br><small>'+(a?ptLine(a,r.date):'')+' · soumis par '+esc(r.subBy||'')+' à '+esc(r.subAt||'')+'</small><br><span class="nt-st '+STG[r.stage][1]+'">'+STG[r.stage][0]+'</span></div>'+btn+'</div>'; }
   let moiAs=null, moiDate=null;
@@ -17356,13 +17462,16 @@ const PG_FEATS=[
         return '<div class="nt-card mo-c"><h3>'+esc(c.nom)+'</h3><p>📍 '+esc(d.site||'adresse non précisée')+'<br>🕘 '+esc(a.hDebut)+' → '+esc(a.hFin)+(a.poste?' · '+esc(a.poste):'')+'</p><p class="nt-s">'+ptLine(a,moiDate)+'</p>'
           +(v?'<p><span class="nt-st '+STG[v.stage][1]+'">'+STG[v.stage][0]+'</span></p>':'<div class="mo-b">'+(!p.i?'<button class="pri" data-in="'+a.id+'"'+(td?'':' disabled title="Pointage possible le jour même"')+'>📍 Pointer ma présence</button>':(!p.o?'<button data-out="'+a.id+'">🏁 Pointer mon départ</button>':''))+(p.i?'<button data-ot="'+a.id+'">⏱ Heure supplémentaire</button><button class="pri" data-sub="'+a.id+'">✔ Valider mon pointage</button>':'')+'</div>')+'</div>'; }).join(''):'<p class="nt-e">Aucune mission le '+fr(moiDate)+'.</p>';
       if(isChef(ag)){ const T=n.ptv.filter(r=>r.stage==='chef'&&r.date===moiDate&&n.affectations.some(x=>x.demandeId===r.demandeId&&x.agentId===ag.id&&daysOf(x).includes(r.date)));
-        h+='<h3>👥 Pointages de mon équipe à valider <small>('+T.length+')</small></h3>'+(T.length?T.map(r=>ptvRow(r,'<button class="pri" data-chef="'+r.id+'">✔ Valider</button>')).join(''):'<p class="nt-e">Aucun pointage en attente.</p>'); } }
+        h+='<h3>👥 Pointages de mon équipe à valider <small>('+T.length+')</small></h3>'+(T.length?T.map(r=>ptvRow(r,'<button class="pri" data-chef="'+r.id+'">✔ Valider</button>')).join(''):'<p class="nt-e">Aucun pointage en attente.</p>'); }
+      h+=moiReserves(ag); h+=moiAbs(ag); }
     w.innerHTML=h+'<p class="nt-s">Votre pointage est envoyé à votre chef d’équipe (ou, à défaut, au responsable opérationnel). Le responsable opérationnel valide toujours en dernier.</p></div>';
     const q=x=>w.querySelector(x), qa=x=>w.querySelectorAll(x), shift=k=>{ const d=new Date(moiDate+'T12:00:00'); d.setDate(d.getDate()+k); moiDate=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); render('net-moi'); };
     q('#mPrev').onclick=()=>shift(-1); q('#mNext').onclick=()=>shift(1); q('#mToday').onclick=()=>{ moiDate=today(); render('net-moi'); }; q('#mDt').onchange=e=>{ moiDate=e.target.value||today(); render('net-moi'); };
     const as=q('#mAs'); if(as) as.onchange=()=>{ moiAs=as.value; render('net-moi'); };
-    qa('[data-in]').forEach(b=>b.onclick=()=>{ const a=by(n.affectations,b.dataset.in); pointSet(a,moiDate,'present'); render('net-moi'); });
-    qa('[data-out]').forEach(b=>b.onclick=()=>{ const a=by(n.affectations,b.dataset.out); ptAdd(a,moiDate,'out'); render('net-moi'); });
+    qa('[data-in]').forEach(b=>b.onclick=()=>{ const a=by(n.affectations,b.dataset.in); geoAsk(geo=>{ pointSet(a,moiDate,'present',geo.lat!=null?geo:null); render('net-moi'); }); });
+    qa('[data-out]').forEach(b=>b.onclick=()=>{ const a=by(n.affectations,b.dataset.out); geoAsk(geo=>{ ptAdd(a,moiDate,'out',null,geo.lat!=null?{geo}:{}); render('net-moi'); }); });
+    qa('[data-lev]').forEach(b=>b.onclick=()=>{ const r=by(n.reserves,b.dataset.lev); if(!r) return; leverReserve(r,()=>render('net-moi')); });
+    const mAbs=q('#mAbs'); if(mAbs) mAbs.onclick=()=>absReqForm(ag);
     qa('[data-ot]').forEach(b=>b.onclick=()=>{ const a=by(n.affectations,b.dataset.ot), o=modal('<h3>⏱ Heure supplémentaire</h3><p class="nt-s">Indiquez l’heure à laquelle vous êtes là en heures supplémentaires.</p><div class="nt-r"><label>De<input id="oFr" type="time" value="'+esc(a.hFin||nowHM())+'"></label><label>À<input id="oTo" type="time" value="'+esc(nowHM())+'"></label></div><div class="nt-b"><button data-x>Annuler</button><button class="pri" id="oOk">Enregistrer</button></div>');
       o.querySelector('#oOk').onclick=()=>{ const f=val(o,'oFr'), t=val(o,'oTo'); if(!f||!t||f===t){ alert('Indiquez l’heure de début et de fin.'); return; } ptAdd(a,moiDate,'ot',f,{to:t}); o.remove(); render('net-moi'); }; });
     qa('[data-sub]').forEach(b=>b.onclick=()=>{ const a=by(n.affectations,b.dataset.sub); if(!confirm('Envoyer mon pointage du '+fr(moiDate)+' pour validation ?')) return; ptvSubmit(a,moiDate); render('net-moi'); });
@@ -17467,7 +17576,7 @@ const PG_FEATS=[
     w.querySelectorAll('[data-cp]').forEach(b=>b.onclick=()=>projetForm(by(n.clients,b.dataset.cp)));
     w.querySelectorAll('[data-pe]').forEach(b=>{ const [cid,pid]=b.dataset.pe.split('|'), c=by(n.clients,cid); b.onclick=()=>projetForm(c,projsOf(c).find(x=>x.id===pid)); });
   }
-  const RENDER = {'net-clients':pgClients,'net-rh':pgRH,'net-demandes':pgDemandes,'net-affect':pgAffect,'net-pointage':pgPointage,'net-moi':pgMoi,'net-rapports':pgRapports};
+  const RENDER = {'net-clients':pgClients,'net-rh':pgRH,'net-demandes':pgDemandes,'net-reserves':pgReserves,'net-affect':pgAffect,'net-pointage':pgPointage,'net-moi':pgMoi,'net-notifs':pgNotifs,'net-rapports':pgRapports};
   const later=p=>setTimeout(()=>render(p),0);
   function render(p){ const w=document.getElementById('netWrap-'+p); if(w&&RENDER[p]) RENDER[p](w); }
   window.netRender = render;
@@ -17491,6 +17600,9 @@ const PG_FEATS=[
     .ok{color:#1b7a43}.warn{color:#b26a00}.ko{color:#b3261e} .u-Urgente{color:#b3261e;font-weight:700}.u-Haute{color:#b26a00;font-weight:600}
     .nt-e{padding:18px;text-align:center;color:#5b6a72;background:#fff;border:1px dashed #cfd6da;border-radius:10px} .nt-s{font-size:12px;color:#5b6a72;margin-top:12px} .nt-w{color:#b26a00;font-size:13px;margin-top:6px} .nt-d{background:#f4f6f7;padding:8px;border-radius:6px}
     .nt-act{white-space:nowrap} .nt-act button{margin:0 2px 2px 0} .nt-tar{width:78px}
+    .nt-ph{max-width:100%;max-height:260px;border-radius:8px;display:block;margin-top:6px} .nt-th{width:40px;height:40px;object-fit:cover;border-radius:6px;margin:0 3px 3px 0;cursor:pointer;border:1px solid #cfd6da}
+    .nt-nf{cursor:pointer} .nt-nf.new{border-left-color:#B4432D} .nt-nf.new::before{content:'● ';color:#B4432D}
+    .tab[data-page="net-notifs"].nt-hasn{background:#B4432D;color:#fff;border-color:#B4432D}
     .nt-rep{border:1px solid #d8d3c8;border-radius:10px;padding:10px;margin:8px 0;background:#faf8f3} .nt-rp{display:flex;flex-wrap:wrap;gap:4px 14px;margin:6px 0;font-size:13px} .nt-rp label{display:flex !important;flex-direction:row !important;align-items:center;gap:6px;font-weight:500} .nt-rp input{width:auto !important} .nt-rp .off{opacity:.55} .nt-rh{font-size:12px;color:#5b6770;margin:6px 0} .nt-rh button{margin-left:6px;padding:2px 8px;border-radius:6px;border:1px solid #16232B;background:#fff;cursor:pointer} .nt-rh button.neg{background:#c0392b;color:#fff;border-color:#c0392b}
     .nt-pl{position:relative;line-height:0;border:1px solid #d8d3c8;border-radius:8px;overflow:hidden;cursor:crosshair;user-select:none;touch-action:manipulation} .nt-pl img{width:100%;display:block} .nt-pl svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none} .nt-pl polygon{fill:rgba(242,169,0,.14);stroke:#F2A900;stroke-width:.0025;vector-effect:non-scaling-stroke}
 .nt-addr{display:block !important;position:absolute;left:0;right:auto;width:max(100%,320px);top:100%;z-index:50;background:#fff;border:1px solid #d8d4c8;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.18);overflow:hidden;margin-top:2px} .nt-addr[hidden]{display:none !important} .nt-addr div{display:block;padding:9px 12px;font:400 13.5px/1.3 'Space Grotesk',system-ui,sans-serif;cursor:pointer;color:#16232B;white-space:normal} .nt-addr div:hover,.nt-addr div.on{background:#fdf1cf}
